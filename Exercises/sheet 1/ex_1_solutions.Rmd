@@ -1,0 +1,31 @@
+---
+title: "sheet_1_ex_1"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-10-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+In the first lecture of this course we got introduced to a study about the **adverse effects of valporic acid on neurological functionality in embryos during pregnancy** (Kurg. A.K. et. a, (2013)). Valporic acid is typically used for treatment of epilepsy, migraines, headaches and even specific types of mental illnesses as a mood stabilizer. However, according to the World Health Organization, it is strongly advised to not take this medication during pregnancy as it bears a high risk of developmental disorders (more information, like if you have literally nothing else to do [here](https://www.who.int/news/item/02-05-2023-use-of-valproic-acid-in-women-and-girls-of-childbearing-potential#:~:text=Valproic%20acid%20%28sodium%20valproate%29%20should%20not%20be%20prescribed,to%20valproic%20acid%20%28sodium%20valproate%29%20in%20the%20womb.)). The study has been done in vitro (in petri dishes) on (multiplied) embryonic stem cells. As the **response-data** we therefore use **gen-expressions, ranging from 2 to 14**. Beside the **6 negative controls** we have seen **7 response-dosages on 3 samples each**.
+
+The data-set has been reduced quite a bit: out of the 10.000 gen expressions, only 500 were chosen based on their variance across **all** samples.
+
+## Requirements
+As part of this analysis, we are using tidyverse (especially ggplot).
+```{r}
+library(tidyverse)
+```
+
+## Importing the data
+To import the data we use the `load()` function. Make sure to have the right working directory, when importing the data. 
+
+```{r}
+# use the setwd(...) function if necessary.
+load("./data/VPAData-Random.Rda")
+head(randomVPA)
+```
