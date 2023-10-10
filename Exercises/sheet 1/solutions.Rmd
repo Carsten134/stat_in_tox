@@ -19,6 +19,7 @@ The data-set has been reduced quite a bit: out of the 10.000 gen expressions, on
 As part of this analysis, we are using tidyverse (especially ggplot).
 ```{r}
 library(tidyverse)
+library(gridExtra)
 ```
 
 ## Importing the data
@@ -65,10 +66,54 @@ for (i in 1:27) {
 ```
 ## Boxplot from the lecture
 The plot from the lecture will be realized using ggplot2
-```{r}
+```{r, out.width="90%", fig.align="center"}
 data %>%
   ggplot(aes(y = gen_exp, x = sample_id, group = sample_id)) +
   geom_boxplot()
 
 ```
+
 ## Variance of genes after response-dosage
+We are going to use tidyverse to calculate the variances. Afterwards using ggplot2 to plot the histogram.
+```{r, out.width="90%", fig.align="center"}
+# using new data set
+var_data <- data %>%
+  group_by(gen_id, concentration) %>%
+  summarise(var_gen_exp = sd(gen_exp)) %>%
+  unique()
+
+# histograms by concentration
+for (i in 1:8) {
+  plot_name <- paste("hist_plot_", i,
+                     sep = "")
+  # filtering data and creating a fitting x label
+  if (i == 1) {
+    plot_data <- var_data %>%
+      filter(concentration == 0)
+    plot_x_label <- paste("response-dosage:", 0)
+  } else {
+    plot_data <- var_data %>%
+      filter(concentration == response_dose[i-1])
+    plot_x_label <- paste("response-dosage:", response_dose[i-1])
+  }
+  
+  # creating a plot and assigning it a name
+  assign(plot_name,
+         plot_data %>%
+           ggplot(aes(x = var_gen_exp)) +
+           geom_histogram() +
+           xlim(0,1) +
+           xlab(plot_x_label))
+}
+grid.arrange(hist_plot_1,
+             hist_plot_2,
+             hist_plot_3,
+             hist_plot_4,
+             hist_plot_5,
+             hist_plot_6,
+             hist_plot_7,
+             hist_plot_8,
+             ncol = 2
+             )
+```
+
