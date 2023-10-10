@@ -1,0 +1,74 @@
+---
+title: "sheet_1_ex_1"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-10-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+In the first lecture of this course we got introduced to a study about the **adverse effects of valporic acid on neurological functionality in embryos during pregnancy** (Kurg. A.K. et. a, (2013)). Valporic acid is typically used for treatment of epilepsy, migraines, headaches and even specific types of mental illnesses as a mood stabilizer. However, according to the World Health Organization, it is strongly advised to not take this medication during pregnancy as it bears a high risk of developmental disorders (more information, like if you have literally nothing else to do [here](https://www.who.int/news/item/02-05-2023-use-of-valproic-acid-in-women-and-girls-of-childbearing-potential#:~:text=Valproic%20acid%20%28sodium%20valproate%29%20should%20not%20be%20prescribed,to%20valproic%20acid%20%28sodium%20valproate%29%20in%20the%20womb.)). The study has been done in vitro (in petri dishes) on (multiplied) embryonic stem cells. As the **response-data** we therefore use **gen-expressions, ranging from 2 to 14**. Beside the **6 negative controls** we have seen **7 response-dosages on 3 samples each**.
+
+The data-set has been reduced quite a bit: out of the 10.000 gen expressions, only 500 were chosen based on their variance across **all** samples.
+
+## Requirements
+As part of this analysis, we are using tidyverse (especially ggplot).
+```{r}
+library(tidyverse)
+```
+
+## Importing the data
+To import the data we use the `load()` function. Make sure to have the right working directory, when importing the data. 
+
+```{r}
+# use the setwd(...) function if necessary.
+load("./data/VPAData-Random.Rda")
+head(randomVPA)
+```
+We will refactor the data to have an easier time with the given tasks:
+```{r}
+
+# we will create the variables for gen expression, sample_id, concentration and gen id
+# length of the data
+n <- 27*500
+data <- data.frame(gen_exp = rep(NA, n),
+                   gen_id = rep(1:500, 27),
+                   concentration = rep(NA, n),
+                   sample_id = rep(NA, n))
+
+# this part of the code is very slow and cheap. Feel free to find a more elegant solution
+response_dose <- c(25, 150, 350, 450, 550, 800, 1000)
+
+data$concentration[1:(6*500)] <- 0
+
+for (i in 1:7) {
+  lower_bound <- 6*500 + (i-1)*1500
+  upper_bound <- 6*500 + i*1500
+  data$concentration[lower_bound:upper_bound] <- response_dose[i]
+}
+
+sample_ids <- factor(as.character(1:27),
+                     levels = as.character(1:27))
+
+for (i in 1:27) {
+  data$sample_id[((i-1)*500):(i*500)] <- sample_ids[i]
+  for (j in 1:500) {
+    coordinate_to_row <- (i-1)*500 + j
+    data$gen_exp[coordinate_to_row] <- randomVPA[j,i]
+    
+  }
+}
+```
+## Boxplot from the lecture
+The plot from the lecture will be realized using ggplot2
+```{r}
+data %>%
+  ggplot(aes(y = gen_exp, x = sample_id, group = sample_id)) +
+  geom_boxplot()
+
+```
+## Variance of genes after response-dosage
