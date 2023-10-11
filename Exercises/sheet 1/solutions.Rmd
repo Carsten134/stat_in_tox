@@ -117,3 +117,45 @@ grid.arrange(hist_plot_1,
              )
 ```
 
+## Ploting the gene profiles with the highest variance
+For this we are going to use `var_data` again
+```{r, out.width="90%", fig.align="center"}
+# finding the max values after concentration
+max_var_data <- var_data %>%
+  group_by(concentration) %>%
+  summarise(max_var = max(var_gen_exp),
+            # find the gen id that corresponds to the maximum value
+            gen_id = gen_id[which(var_gen_exp == max(var_gen_exp))]) %>%
+  unique()
+
+# inner join with processed data
+max_var_plot_data <- data %>%
+  filter(gen_id %in% max_var_data$gen_id)
+
+# plotting
+max_var_plot_data %>% ggplot(aes(x = sample_id,
+                                 y = gen_exp,
+                                 group = gen_id)) +
+  geom_line(size = 1)
+```
+
+afterwards we are going to repeat the same procedure for min values:
+```{r, out.width="90%", fig.align="center"}
+# finding the max values after concentration
+min_var_data <- var_data %>%
+  group_by(concentration) %>%
+  summarise(min_var = min(var_gen_exp),
+            # find the gen id that corresponds to the maximum value
+            gen_id = gen_id[which(var_gen_exp == min(var_gen_exp))]) %>%
+  unique()
+
+# inner join with processed data
+min_var_plot_data <- data %>%
+  filter(gen_id %in% min_var_data$gen_id)
+
+# plotting
+min_var_plot_data %>% ggplot(aes(x = sample_id,
+                                 y = gen_exp,
+                                 group = gen_id)) +
+  geom_line(size = 1)
+```
