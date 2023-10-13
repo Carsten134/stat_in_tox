@@ -26,7 +26,6 @@ To import the data we use the `load()` function. Make sure to have the right wor
 ```{r}
 # use the setwd(...) function if necessary.
 load("./data/VPAData-Random.Rda")
-head(randomVPA)
 ```
 We will refactor the data to have an easier time with the given tasks:
 ```{r}
@@ -62,7 +61,7 @@ for (i in 1:27) {
   }
 }
 ```
-## Boxplot from the lecture
+## a) Boxplot from the lecture
 The plot from the lecture will be realized using ggplot2
 ```{r, out.width="90%", fig.align="center"}
 data %>%
@@ -71,9 +70,9 @@ data %>%
 
 ```
 
-## Variance of genes after response-dosage
+## b) Variance of genes after response-dosage
 We are going to use tidyverse to calculate the variances. Afterwards using ggplot2 to plot the histogram.
-```{r, out.width="90%", fig.align="center"}
+```{r, out.width="90%", fig.align="center", warning=FALSE}
 # using new data set
 var_data <- data %>%
   group_by(gen_id, concentration) %>%
@@ -115,7 +114,7 @@ grid.arrange(hist_plot_1,
              )
 ```
 
-## Ploting the gene profiles with the highest variance
+## c) Ploting the gene profiles with the highest variance
 For this we are going to use `var_data` again
 ```{r, out.width="90%", fig.align="center"}
 # finding the max values after concentration
@@ -158,4 +157,118 @@ min_var_plot_data %>% ggplot(aes(x = sample_id,
   geom_line(size = 1)
 ```
 
-## 
+## d) Mean gene expression after concentration per gene
+```{r, out.width="90%", fig.align="center"}
+# generating the data same way as in (c)
+mean_data <- data %>%
+  group_by(gen_id, concentration) %>%
+  summarise(mean_gen_exp = mean(gen_exp)) %>%
+  unique()
+
+box_plot_mean <- mean_data %>%
+  ggplot(aes(x = concentration,
+             y = mean_gen_exp,
+             group = concentration)) +
+  geom_boxplot()
+
+box_plot_mean
+```
+
+## e) Grouping by monotonically increasing and decreasing
+```{r}
+is_increasing <- function(v) {
+  n <- length(v)
+  return(sum(order(v) != 1:n) == 0)
+}
+
+is_decreasing <- function(v) {
+  n <- length(v)
+  return(sum(order(v) != n:1) == 0)
+}
+
+mean_data <- arrange(mean_data, gen_id, concentration)
+
+# generating additional variables for increasing and decreasing
+mean_data$is_increasing <- rep(NA, 4000)
+mean_data$is_decreasing <- rep(NA, 4000)
+
+for (i in 1:500) {
+  lower <- ((i-1)*8+1)
+  upper <- (i*8)
+  mean_data$is_increasing[lower:upper] <- is_increasing(mean_data$mean_gen_exp[lower:upper])
+  mean_data$is_decreasing[lower:upper] <- is_decreasing(mean_data$mean_gen_exp[lower:upper])
+}
+
+data <- left_join(data, mean_data, by=c("gen_id", "concentration"))
+
+data_decreasing <- data %>%
+  filter(is_decreasing)
+
+data_decreasing %>% 
+  ggplot(aes(x = concentration,
+             y = gen_exp)) +
+  geom_point(aes(alpha = 0.1)) +
+  geom_line(aes(group = gen_id,
+                y = mean_gen_exp))
+
+```
+
+```{r}
+data_increasing <- data %>%
+  filter(is_increasing)
+
+data_increasing %>% 
+  ggplot(aes(x = concentration,
+             y = gen_exp)) +
+  geom_point(aes(alpha = 0.1)) +
+  geom_line(aes(group = gen_id,
+                y = mean_gen_exp))
+
+```
+
+## f) plotting differences from controll
+
+```{r, warning=FALSE}
+# first compute the mean of control-dosages
+controll_data <- data %>% 
+  filter(concentration == 0) %>%
+  group_by(gen_id) %>%
+  summarise(mean_controll = mean(gen_exp)) %>%
+  unique()
+
+# 
+final_data <- data %>% left_join(controll_data, by=c("gen_id"))
+
+# computing differences
+final_data$diff_controll <- final_data$mean_gen_exp - final_data$mean_controll
+
+# removing control-dosages
+final_data <- final_data %>% filter(concentration != 0)
+
+# histograms by concentration
+for (i in 1:7) {
+  plot_name <- paste("hist_plot_", i,
+                     sep = "")
+  plot_data <- final_data %>%
+    filter(concentration == response_dose[i])
+  
+  plot_x_label <- paste("response-dosage:", response_dose[i])
+  
+  # creating a plot and assigning it a name
+  assign(plot_name,
+         plot_data %>%
+           ggplot(aes(x = diff_controll)) +
+           geom_histogram() +
+           xlim(0,1) +
+           xlab(plot_x_label))
+}
+grid.arrange(hist_plot_1,
+             hist_plot_2,
+             hist_plot_3,
+             hist_plot_4,
+             hist_plot_5,
+             hist_plot_6,
+             hist_plot_7,
+             ncol = 2
+             )
+```
