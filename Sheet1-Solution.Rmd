@@ -3,6 +3,8 @@ title: "Statistics in Toxicology I - Exercise Sheet 1"
 output: pdf_document
 ---
 
+# Exercise 1: Descriptive analysis of the VPA dataset
+
 ```{r, results = FALSE, fig.show= TRUE}
 ## Exercise 1
 
@@ -156,5 +158,115 @@ apply(matrix(1:7), 1, FUN = function(x) {
 title("Histograms of differences", outer = TRUE)
 
 
+```
+
+\newpage
+
+# Exercise 3: PAVA II
+
+```{r, warning = FALSE, include=FALSE}
+load("VPA-Isotonic.RData")
+library("Iso")
+```
+
+
+```{r, warning = FALSE}
+## (i)
+
+## First, calculate the means for each concentration and add a weights vector:
+## Use the mean.concentration function fromm Exercise 1:
+meansEx3 <- t(sapply(1:3, FUN = function(x) mean.concentration(VPA.Isotonic[x,])))
+
+weights <- c(6, rep(3, 7))
+
+
+## Perform isotonic regression with w = weights for first gene:
+
+pava(meansEx3[1,], weights)
+
+## Plot against concentrations and add data points and means:
+
+plot(replicates, VPA.Isotonic[1,], 
+     ylab = "Response", xlab = "Concentration", main = "Gene 1")
+points(concentrations, meansEx3[1, ], pch = 4)
+points(concentrations, pava(meansEx3[1,], weights), type = "l")
+legend("topleft", legend = c("Observations", "Means"), pch = c(1, 4))
+
+## Isotonic regression works neatly in this example. We see small violations
+## between 3rd and 4th concentration as well as between 5th and 6th. All in all
+## the assumption of isotonicity seems appropiate.
+
+
+## Second and third Gene:
+
+## Isotonic regression: 
+
+pava(meansEx3[2,], weights)
+pava(meansEx3[3,], weights)
+
+## Plots: 
+
+plot(replicates, VPA.Isotonic[2,], 
+     ylab = "Response", xlab = "Concentration", main = "Gene 2")
+points(concentrations, meansEx3[2, ], pch = 4)
+points(concentrations, pava(meansEx3[2,], weights), type = "l")
+legend("bottomleft", legend = c("Observations", "Means"), pch = c(1, 4))
+
+
+plot(replicates, VPA.Isotonic[3,], 
+     ylab = "Response", xlab = "Concentration", main = "Gene 3")
+points(concentrations, meansEx3[3, ], pch = 4)
+points(concentrations, pava(meansEx3[3,], weights), type = "l")
+legend("bottomleft", legend = c("Observations", "Means"), pch = c(1, 4))
+
+## In these two examples the isotonic regression fails. 
+## For Gene 2 we can see an antitonic relationship between concentration and 
+## response in the data. An antitonic regression would make more sense here.
+## For Gene 3 the relationship seems to take the shape of a parabola. 
+## Isotonic regression might not be suitable here.
+
+
+## (ii)
+
+apply(matrix(1:3), 1, FUN = function(x) {
+  plot(replicates, VPA.Isotonic[x,], 
+       ylab = "Response", xlab = "Concentration", main = paste("Gene", x))
+  points(concentrations, meansEx3[x, ], pch = 4)
+  points(concentrations, pava(meansEx3[x,], weights, decreasing = TRUE), 
+         type = "l")
+})
+
+## Antitonic regression fails for Gene 1 and 3 but works very well for Gene 2
+
+## (iii)
+
+## Reverse data by using -concentration:
+
+apply(matrix(1:3), 1, FUN = function(x) {
+  plot(-replicates, VPA.Isotonic[x,], 
+       ylab = "Response", xlab = "-Concentration", main = paste("Gene", x))
+  points(-concentrations, meansEx3[x, ], pch = 4)
+  points(-concentrations, rev(pava(rev(meansEx3[x,]), rev(weights))) ,
+         type = "l")
+})
+
+## It has the same effect as performing antitonic regression on the original
+## data
+
+## (iv)
+
+## Reverse data by using -concentration and performing antitonic regression:
+
+apply(matrix(1:3), 1, FUN = function(x) {
+  plot(-replicates, VPA.Isotonic[x,], 
+       ylab = "Response", xlab = "-Concentration", main = paste("Gene", x))
+  points(-concentrations, meansEx3[x, ], pch = 4)
+  points(-concentrations, rev(pava(rev(meansEx3[x,]), rev(weights), 
+                                   decreasing = TRUE)) ,
+         type = "l")
+})
+
+## As expected, it is equivalent to performing isotonic regression on original
+## data.
 ```
 
