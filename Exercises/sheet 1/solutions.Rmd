@@ -1,8 +1,6 @@
 ---
-title: "sheet_1_ex_1"
-output:
-  html_document: default
-  pdf_document: default
+title: "sheet 1 exercise one solutions"
+output: pdf_document
 date: "2023-10-09"
 ---
 
@@ -159,3 +157,5 @@ min_var_plot_data %>% ggplot(aes(x = sample_id,
                                  group = gen_id)) +
   geom_line(size = 1)
 ```
+
+## 
