@@ -1,0 +1,78 @@
+---
+title: "sheet 2 solutions (coding part)"
+author: "carsten stahl"
+date: "2023-10-17"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading the data
+Before starting this exercise we are going to load the data and requirements
+
+```{r}
+library(tidyverse)
+library(nlme)
+load("./data/SimulatedTreatmentEffect.RData")
+```
+
+## a)
+
+```{r}
+gnls_treatment <- gnls(resp ~ th1+(th4-th1)/(1+(exp((conc-th2)*th3))),
+                       data = conc.resp.df,
+                       params=list(th1+th2+th3+th4~1),
+                       control=gnlsControl(nlsTol=0.1),
+                       start=c(0, 2, 1, 100))
+
+summary(gnls_treatment)
+```
+- The slope is positive -> upward slope
+- The response ranges from 2 to almost 100
+- The alert-dosage (logscaled) is at around 2 (a little smaller than 1)
+
+## b)
+
+```{r}
+# creating dummy variables
+conc.resp.df$in_T1 <- conc.resp.df$treat == "T1"
+conc.resp.df$in_T2 <- conc.resp.df$treat == "T2"
+
+# applying model
+gnls_treatment_with_dummy <- gnls(resp~(th1+(th4-th1)/(1+(exp((conc-th2)*th3))))*in_T1 +
+                                    (th1+(th4-th1)/(1+(exp((conc-th2)*th3))))*in_T2,
+                       data = conc.resp.df,
+                       params=list(th1+th2+th3+th4~1),
+                       control=gnlsControl(nlsTol=0.1),
+                       start=c(0, 2, 1, 100))
+
+summary(gnls_treatment_with_dummy)
+```
+
+Nothing really changed
+
+## c)
+```{r}
+gnls_treatment_with_dummy_diff <- gnls(resp~(th1+(th4-th1)/(1+(exp((conc-th21)*th31))))*in_T1 +
+                                    (th1+(th4-th1)/(1+(exp((conc-th22)*th32))))*in_T2,
+                                 data = conc.resp.df,
+                                 params=list(th1+th21+th22+th31+th32+th4~1),
+                                 control=gnlsControl(nlsTol=0.1),
+                                 start=c(0, 2, 2, 1, 1, 100))
+
+summary(gnls_treatment_with_dummy_diff)
+
+```
+
+Both alert-concentration and slope have changed after treatment. The model is expected to have a better fit.
+
+## d)
+```{r}
+anova(gnls_treatment_with_dummy_diff, gnls_treatment)
+```
+
+Yes, the p value is suffiently low to say, that the models are different.
