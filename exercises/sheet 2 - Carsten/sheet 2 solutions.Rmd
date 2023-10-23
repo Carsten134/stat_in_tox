@@ -76,3 +76,14 @@ anova(gnls_treatment_with_dummy_diff, gnls_treatment)
 ```
 
 Yes, the p value is suffiently low to say, that the models are different.
+
+
+# Exercise 6
+## a)
+The explanatory variable is the plant-weight (unit of measure not known). Because no sandwich estimator can be seen, the distribution is assumed to have variance homogeniety.
+
+## b)
+Because we use a sigmoid-curve, it is assumed that there is a sudden and rapid change in the response.
+
+## c)
+$c > 0$ implies a positive slope.
