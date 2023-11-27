@@ -1,0 +1,98 @@
+---
+title: "Sheet 3 Tox"
+output: html_document
+date: "2023-11-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exercise 7
+```{r}
+library("drc")
+```
+first we need to load the data-set "terbuthylazin".
+```{r}
+data(terbuthylazin)
+terbuthylazin
+```
+The dataset seems to have 8*3 dosages + 6 Controll dosages. The variable 'rgr' represents the growth rate on a type of lentil.
+
+next let's fit the weibull model:
+```{r}
+terb.model.weibull.1 <- drm(rgr~dose,
+                            data = terbuthylazin,
+                            type = "continuous",
+                            fct = weibull1())
+terb.model.weibull.1
+```
+as help let's use the plot function to display this model:
+```{r}
+plot(terb.model.weibull.1)
+```
+First off the slope d is positive, therefore we have a descending curve.
+Therefore we have d as the upper asymptote and c as the lower asymptote.
+Furthermore the inflection point is more left  and lower. 
+
+
+Let's fit with the lower asymptote fixed at 0:
+```{r}
+terb.model.weibull.1.fixed <- drm(rgr~dose,
+                                  data = terbuthylazin,
+                                  type = "continuous",
+                                  fct = weibull1(
+                                    fixed = c(NA, 0,NA, NA)
+                                  ))
+terb.model.weibull.1.fixed
+```
+Now the upper asymptote is a little bit higher while the slope decreased.
+```{r}
+plot(terb.model.weibull.1.fixed)
+```
+
+We can see here that the response for the highest dosage does not quite fit.
+```{r}
+ED(terb.model.weibull.1,
+   c(10,20,50,80),
+   type="relative")
+
+ED(terb.model.weibull.1.fixed,
+   c(10,20,50,80),
+   type="relative")
+```
+Here we can see that the ED values for higher effects are much lower for the fixed model.
+
+```{r}
+e.max.weibull1 <- terb.model.weibull.1$coefficients[3] -terb.model.weibull.1$coefficients[2]
+e.max.weibull1.fixed <- terb.model.weibull.1.fixed$coefficients[2]
+
+
+print("for the unrestricted model:")
+# print corresponding effects for the unrestricted model
+for(i in c(10,20,50,80)) {
+  print(terb.model.weibull.1$coefficients[3] - e.max.weibull1*(i/100))
+}
+
+print("for the restricted model:")
+# print corresponding effects for the unrestricted model
+for(i in c(10,20,50,80)) {
+  print(e.max.weibull1*(1-i/100))
+}
+```
+
+For the restricted model we see also lower effects for the ED-values.
+
+Lets now plot the models together
+```{r}
+plot(terb.model.weibull.1)
+plot(terb.model.weibull.1.fixed, add= T)
+```
+## Exercise 8
+Let's first load the dataset
+```{r}
+data(algae)
+algae
+```
+So 2 samples for 6 dosages and one controll-group
+Let's fit a 4pLL model:
