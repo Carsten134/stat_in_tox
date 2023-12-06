@@ -1,0 +1,44 @@
+---
+title: "Sheet 6"
+output: html_document
+date: "2023-12-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("DoseFinding")
+```
+## Exercise 19
+
+Let's load data
+```{r}
+load("./data/data.Rdata")
+
+head(selected_data)
+```
+
+guesstimate:
+````{r}
+candidate.models <- c("emax","exponential", "logistic", "quadratic", "sigEmax")
+
+candMods <- c()
+
+for(model in candidate.models){
+  candMods <- c(candMods,  guesst(c(450, 800), c(0.4, 0.7),
+                   model = model,
+                   Maxd = 1000))
+}
+
+candMods[5]
+````
+### calculation of standard models
+```{r}
+standMods <- Mods(doses = c(0, 25, 150, 350, 450, 550, 800, 1000),
+                  emax = c(5.089286e+02),
+                  exponential = c(1.474766e+03),
+                  logistic = c(5.632798e+02 , 5.632798e+02),
+                  qudratic = c(279.3825),
+                  sigMax = c(5.421095e+02, 2.177339e+00))
+
+standMods
+```

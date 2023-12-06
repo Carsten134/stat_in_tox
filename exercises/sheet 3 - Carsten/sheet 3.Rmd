@@ -94,5 +94,35 @@ Let's first load the dataset
 data(algae)
 algae
 ```
-So 2 samples for 6 dosages and one controll-group
+So 2 samples for 6 dosages and one control-group
 Let's fit a 4pLL model:
+```{r}
+algae.4pLL <- drm(vol ~ conc,
+                  data = algae,
+                  fct = LL.4(),
+                  type = "continuous")
+
+algae.4pLL
+```
+Since b is positive we see a negative slope. We also know, that the lower asymptote is at -1.4 (which is not possible). Also the upper asymptote is at an effect size of 105 volume units.
+
+```{r}
+plot(algae.4pLL)
+points(algae$conc,algae$vol)
+```
+
+Here we can see the slope of the model
+
+```{r}
+plot(algae$conc, residuals(algae.4pLL))
+```
+We can see, that the variance significantly decreases the higher the dosage. We therefore expect biased estimates for the variance of the residuals. 
+
+Let's use the sandwich estimator to fix this bias.
+```{r}
+# avoiding naming conflicts
+estfun.drc <- drc::estfun.drc
+bread.drc <- drc::bread.drc
+
+sandwich::sandwich(algae.4pLL)
+```

@@ -1,0 +1,90 @@
+---
+title: "Sheet 4"
+output: html_document
+date: "2023-12-01"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("drc")
+```
+
+### Exercise 11
+This exercise is all about binomial response-data.
+
+```{r}
+load("./data/Binomial-DoseResponse.Rdata")
+
+binom.3pLL <- drm(events ~ dose,
+                  fct = LL.3u(),
+                  data = binom.events,
+                  type = "binomial",
+                  weights = total,
+                  curveid = treat)
+binom.3pLL
+```
+```{r}
+plot(binom.events$dose, binom.events$events)
+```
+Plotting the models
+
+```{r}
+plot(binom.3pLL)
+```
+
+```{r}
+ED(binom.3pLL, 20, type="relative")
+```
+
+### Exercise 12
+Now counting data
+```{r}
+load("./data/Nrleaves.Rdata")
+
+leaves.model <- drm(NrLeaves ~ Concentration,
+                    data = Nrleaves.df,
+                    fct = LL.4(),
+                    type = "Poisson")
+
+summary(leaves.model)
+```
+
+We can see: 
+- b is positive -> negative slope -> compounds inhibits leaf growth
+- c the lower asymptote is at 2.75 leaves
+- d the upper asymptote is at 18.9 leaves
+- e ED50 dosage at 1.12
+
+let's plot the model just to be sure
+```{r}
+plot(leaves.model)
+```
+
+Here we can see the decreasing slope.
+
+### including times
+we are going to include time as a weight
+```{r}
+leaves.model.with.weigths <- drm(NrLeaves ~ Concentration,
+                                data = Nrleaves.df,
+                                fct = LL.4(),
+                                weights = Days,
+                                type = "Poisson")
+
+
+summary(leaves.model.with.weigths)
+```
+Estimation is now normalized to day. Therefore the fitted values are no longer in sync with the data.
+```{r}
+
+```
+
+### Exercise 13
+### b)
+We only have given that $X\sim \mathcal N(\mu,\sigma^2)$.
+
+We can apply taylor approximation. 
+### c)
+same with variance 
+
+### Exercise 14
