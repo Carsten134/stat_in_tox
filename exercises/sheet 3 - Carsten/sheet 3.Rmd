@@ -126,3 +126,20 @@ bread.drc <- drc::bread.drc
 
 sandwich::sandwich(algae.4pLL)
 ```
+
+### d)
+We want to refit the model after the box-cox transformation.
+
+```{r}
+algae.4pLL.box.cox <- boxcox(algae.4pLL)
+
+```
+
+we see: The best usage of lambda is slightly around 0.5. We now can compare the results:
+```{r}
+summary(algae.4pLL)
+
+summary(algae.4pLL.box.cox)
+```
+
+Now we can see the bias in the estimates of the standard errors. Especially on parameters d and e they seem to be less. Furthermore the asymptotes have changed. This has most likely to do with the box-cox-transformation itself.

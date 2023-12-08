@@ -2,7 +2,9 @@
 title: "Sheet 7"
 author: "Carsten Stahl"
 date: "2023-12-05"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Exercise 22
-implementation of the bicluster consists a couple of functions first one is $H_Y$ for a given matrix:
+implementation of the bicluster consists a couple of functions first one is the computation of the residuals and $H_Y$ for a given matrix:
 ```{r}
 # computes the heterogeneity-index for a given matrix m
 biclustering_residuals <- function(m) {
@@ -25,9 +27,6 @@ biclustering_residuals <- function(m) {
   overall_mean <- mean(m)
   column_wise_mean <- c()
   row_wise_mean <- c()
-  
-  
-  
   
   residuals <- matrix(data = rep(NA, n_col*n_row),
                               nrow = n_row,
@@ -55,7 +54,7 @@ h_y <- function(m) {
   return(sum(biclustering_residuals(m)))
 }
 ```
-Next we want to implement the biclustering algorithm for one cluster next.
+Next we want to implement the biclustering-algorithm of method 2 for one cluster:
 ```{r}
 bicluster <- function(m, delta) {
   if (is.matrix(m) == T) {
@@ -77,9 +76,6 @@ bicluster <- function(m, delta) {
   # else check contributions
   contr_row <- c()
   contr_col <- c()
-  
-  
-  
   
   bi_res <- biclustering_residuals(m)
   

@@ -1,6 +1,8 @@
 ---
 title: "Sheet 6"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2023-12-01"
 ---
 
