@@ -9,6 +9,7 @@ date: "2023-12-01"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library("DoseFinding")
+library("tidyverse")
 ```
 ## Exercise 19
 
@@ -23,24 +24,183 @@ guesstimate:
 ````{r}
 candidate.models <- c("emax","exponential", "logistic", "quadratic", "sigEmax")
 
-candMods <- c()
+guesst(450, 0.4,
+       Maxd = 1000,
+       model = "exponential")
 
-for(model in candidate.models){
-  candMods <- c(candMods,  guesst(c(450, 800), c(0.4, 0.7),
-                   model = model,
-                   Maxd = 1000))
-}
+guesst(c(450, 800), c(0.4, 0.7),
+       model = "sigEmax",
+       Maxd = 1000)
 
-candMods[5]
+candMods
 ````
 ### calculation of standard models
 ```{r}
-standMods <- Mods(doses = c(0, 25, 150, 350, 450, 550, 800, 1000),
+doses <- c(0, 25, 150, 350, 450, 550, 800, 1000)
+
+standMods <- Mods(doses = doses,
                   emax = c(5.089286e+02),
                   exponential = c(1.474766e+03),
                   logistic = c(5.632798e+02 , 5.632798e+02),
-                  qudratic = c(279.3825),
-                  sigMax = c(5.421095e+02, 2.177339e+00))
+                  quadratic = c(-0.0002665608),
+                  sigEmax = c(542.109513, 2.177339),
+                  betaMod =  c(1,2),
+                  maxEff = 1)
 
-standMods
+plot(standMods)
+```
+All are monotonically increasing. Logistic is almost linear same for sigEmax. This implies, that the models most similar to a linear shape will most likely get the best scores in the end. We furthermore expect to have no flat profile.
+### optimal contrast coefficients
+Dosages from selected data
+```{r}
+contrast <- optContr(standMods,
+                     doses = doses,
+                     w = c(6, rep(3,7)),
+                     type = "unconstrained")
+
+plot(contrast)
+```
+
+Note how all contrast coefficients are increasing.
+
+### applying MCP-Mod
+Filtering for unique genes
+```{r}
+gen_ids <- selected_data$gene %>%
+  unique()
+
+apply_MCP <- function(gen) {
+  data <- selected_data %>%
+      filter(gene == gen)
+  
+  MM <- MCPMod(dose = dose,
+               resp = expression,
+               data = data,
+               models = standMods,
+               alpha = 0.05,
+               alternative = "two.sided",
+               mvtcontrol = mvtnorm.control(maxpts = 100000),
+               Delta = log2(1.5)
+               )
+  return(MM)
+}
+
+MM1 <- apply_MCP(gen_ids[1])
+MM1
+```
+
+We can see the first profile is very flat. This can also be seen in the plot:
+```{r}
+flat_data <- selected_data %>%
+  filter(gene == gen_ids[1])
+
+plot(flat_data$dose, flat_data$expression)
+```
+
+Now apply for other gene-profiles as well.
+
+```{r}
+MM2 <- apply_MCP(gen_ids[2])
+MM2
+```
+
+We see significant results for every model.
+```{r}
+MM3 <- apply_MCP(gen_ids[3])
+MM3
+```
+
+We also see significant results for the last profile. Let's take a look at the acutual models themselves.
+```{r}
+plot(MM2)
+plot(MM3, add = T)
+```
+
+
+We can see with the second profile a much more linear response. Whereas the last profile is much more sigmoidal.
+```{r}
+apply_MCP_avg <- function(gen) {
+  data <- selected_data %>%
+      filter(gene == gen)
+  
+  MM <- MCPMod(dose = dose,
+               resp = expression,
+               data = data,
+               models = standMods,
+               selModel = "aveAIC",
+               alpha = 0.05,
+               alternative = "two.sided",
+               mvtcontrol = mvtnorm.control(maxpts = 100000),
+               Delta = log2(1.5)
+               )
+  return(MM)
+}
+
+MM2.avg <- apply_MCP_avg(gen_ids[2])
+MM3.avg <- apply_MCP_avg(gen_ids[3])
+
+sum(MM2.avg$selMod*MM2.avg$doseEst)
+sum(MM3.avg$selMod*MM3.avg$doseEst)
+```
+With the second profile we have a noticeable effect very early while in the third profile we see no effect and then everything at once (hence the sigmoidal fit). This is why the MED estimate for the second profile is way lower than the third profile. 
+
+
+### Exercise 20 AIC model-weights
+a)
+
+load respective data:
+```{r}
+load("./data/Gene.AICweights.Rdata")
+```
+define necessary functions and options.
+```{r}
+
+compute.aic.w <- function(dose, resp, data=NULL, models) {
+  modnr <- length(models)
+  aic <- c(); aicw <- c()
+  # compute AIC values
+  for (i in 1:modnr) {
+    aic[i] <- AIC(fitMod(dose,resp,data=data,model=models[i]), message = F)
+  }
+  aicmin <- min(aic)
+  # compute Delta AIC for all models (vector operation)
+  daic <- aic-aicmin
+  
+  # denominator of the term
+  denom <- sum(exp(-1/2*(daic))/modnr)
+  
+  # AIC weights
+  for (i in 1:modnr) {
+    aicw[i] <- round(exp(-1/2*daic[i])/(modnr*denom),4) 
+  }
+  names(aicw) <- models
+  return(aicw) 
+}
+
+models <- c("sigEmax", "exponential", "linear", "quadratic", "betaMod")
+```
+run through all genes and compute AIC weights
+```{r}
+weightmat <- matrix(ncol=5, nrow=20)
+colnames(weightmat) <- models
+
+for(j in 1:20){
+  weightmat[j,] <- compute.aic.w(dose = Gene.AICweights$dose, resp = Gene.AICweights[,j+1], models = models)
+}
+weightmat
+```
+
+```{r}
+weights.df <- data.frame(gene = factor(paste0("gene", rep(1:20, each=5)), 
+                                       levels=c("gene1", "gene2", "gene3", "gene4", "gene5", "gene6", "gene7", "gene8", 
+                                                "gene9", "gene10", "gene11", "gene12", "gene13", "gene14", "gene15",
+                                                "gene16", "gene17", "gene18", "gene19", "gene20")),
+                         model = factor(rep(models, 20), levels=rev(models)),
+                         weights = as.vector(t(weightmat)))
+
+library(ggplot2)
+g <- ggplot() +
+  geom_bar(data=weights.df, aes(x=gene, y=weights,fill=model),stat="identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(g)
 ```
