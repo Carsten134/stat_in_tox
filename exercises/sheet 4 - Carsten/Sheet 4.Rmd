@@ -88,3 +88,26 @@ We can apply taylor approximation.
 same with variance 
 
 ### Exercise 14
+loading the bmd package
+```{r}
+# im just going to write down the code and not execute it
+# (i)
+bmd(binom.3pLL, bmr=0.1, backgType = "modelbased", def="additional")
+# (ii)
+bmd(binom.3pLL, bmr = 0.1, backgType = "modelbased", def = "excess")
+# (iii)
+bmd(binom.3pLL, bmr = 0.1, backgType = "absolute", backg = 0.15, def = "additional")
+# (iv)
+bmd(binom.3pLL, bmr = 0.1, backgType = "absolute", backg = 0.15, def = "excess")
+
+## b)
+#(i)
+bmd(leaves.4pLL, bmr = 0.1, backgType = "absolute", backg = 85, def = "hybridAdd")
+#(ii)
+bmd(leaves.4pLL, bmr = 0.1, backgType = "absolute", backg = 85, def = "hybridExc")
+
+#(iii)
+bmd(leaves.4pLL, bmr = 0.1, backgType = "hybridSD", def = "hybridAdd")
+# (iv)
+bmd(leaves.4pLL, bmr = 0.1, backgType = "hybridSD", def = "hybridExc")
+```

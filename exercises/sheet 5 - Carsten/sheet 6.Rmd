@@ -1,0 +1,85 @@
+---
+title: "Sheet 5"
+author: "Carsten Stahl"
+date: "2023-12-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("drc")
+```
+
+### Exercise 16
+We first import the data
+```{r}
+load("./data/data_gradedsheet.Rdata")
+
+head(data_gradedsheet)
+```
+In this experiment we observe the effect of a herbicide on the length of leaves and the number of dead flies.
+
+We see the variable "lenghth" is continuous and the "num.Dead" is binomial with the total of flies given in "total".
+
+```{r}
+leaves.4pLL <- drm(Length ~ Conc,
+                   data = data_gradedsheet,
+                   fct = LL2.4())
+
+summary(leaves.4pLL)
+```
+
+We can see that the slope is decreasing (b > 0) with the upper asymptote at d  = 19,09 and the lower asymptote around c = 7,877.
+
+Also the b parameter is only slightly different than zero, giving some evidence, that the effect is not as strong as the model tries to replicate.
+
+e is the logistic ED50 value which lies around 1,3.
+
+plotting the function leads to:
+```{r}
+plot(leaves.4pLL)
+```
+
+Here we can see the flat curve that the b parameter is indicating.
+
+### ploting residuals
+```{r}
+plot(leaves.4pLL$predres)
+```
+
+We can see that the residuals slightly vary in their variance. This gives us reason to apply some method of dealing with variance heterogeneity.
+
+```{r}
+library(sandwich)
+library(lmtest)
+# fixing naming conflicts
+estfun.drc <- drc::estfun.drc
+bread.drc <- drc::bread.drc
+
+# calculation of sandich estimation
+coeftest(leaves.4pLL, vcov. = sandwich)
+```
+The standard-error for b has fallen, which points to a previously biased estimate. The p-value thus improves.
+
+estimating after box-cox yields:
+```{r}
+leaves.4pLL.box.cox <- boxcox(leaves.4pLL, method ="anova", plot = F)
+
+summary(leaves.4pLL.box.cox)
+``` 
+sigificance levels do not change and the estimates for the parameter do change, because we transformed the data.
+
+### calculation of ED values
+```{r}
+ED(leaves.4pLL, c(10, 20, 80), type="relative")
+```
+
+Because of log-scaling we get negative values. these lie somewhere lower than 1. The relative ed values represent dosages where a specific percentage (10,20,80) of the maximal effect is surpassed.
+
+### calculations of the bmd values
+using the bmd function
+
+```{r}
+
+
+```

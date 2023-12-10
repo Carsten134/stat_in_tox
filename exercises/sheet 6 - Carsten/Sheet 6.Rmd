@@ -22,17 +22,15 @@ head(selected_data)
 
 guesstimate:
 ````{r}
-candidate.models <- c("emax","exponential", "logistic", "quadratic", "sigEmax")
-
 guesst(450, 0.4,
        Maxd = 1000,
        model = "exponential")
-
 guesst(c(450, 800), c(0.4, 0.7),
        model = "sigEmax",
        Maxd = 1000)
 
-candMods
+
+
 ````
 ### calculation of standard models
 ```{r}
